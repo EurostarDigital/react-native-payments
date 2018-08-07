@@ -4,7 +4,9 @@
 import type {
   PaymentComplete,
   PaymentDetailsInit,
-  PaymentAddress
+  PaymentAddress,
+  BillingContact,
+  PaymentDetailsIOS,
 } from './types';
 
 // Modules
@@ -21,6 +23,8 @@ export default class PaymentResponse {
   _payerPhone: null | string;
   _payerEmail: null | string;
   _completeCalled: boolean;
+  _billingContact: BillingContact;
+  _token: PaymentDetailsIOS;
 
   constructor(paymentResponse: Object) {
     // Set properties as readOnly
@@ -32,6 +36,8 @@ export default class PaymentResponse {
     this._payerName = paymentResponse.payerName;
     this._payerPhone = paymentResponse.payerPhone;
     this._payerEmail = paymentResponse.payerEmail;
+    this._billingContact = paymentResponse.billingContact;
+    this._token = paymentResponse.token;
 
     // Internal Slots
     this._completeCalled = false;
@@ -48,8 +54,13 @@ export default class PaymentResponse {
   }
 
   // https://www.w3.org/TR/payment-request/#details-attribute
-  get details(): PaymentDetailsInit {
-    return this._details;
+  get billingContact(): BillingContact {
+    return this._billingContact;
+  }
+
+  // https://www.w3.org/TR/payment-request/#details-attribute
+  get token(): PaymentDetailsIOS {
+    return this._token;
   }
 
   // https://www.w3.org/TR/payment-request/#shippingaddress-attribute-1
@@ -78,7 +89,7 @@ export default class PaymentResponse {
   }
 
   // https://www.w3.org/TR/payment-request/#complete-method
-  complete(paymentStatus: PaymentComplete) {
+  complete(paymentResponse) {
     if (this._completeCalled === true) {
       throw new Error('InvalidStateError');
     }
@@ -86,7 +97,7 @@ export default class PaymentResponse {
     this._completeCalled = true;
 
     return new Promise((resolve, reject) => {
-      return NativePayments.complete(paymentStatus, () => {
+      return NativePayments.complete(paymentResponse, () => {
         return resolve(undefined);
       });
     });
